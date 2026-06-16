@@ -1,0 +1,44 @@
+#!/bin/sh
+# postinst — wire the killsuru wrapper into interactive bash and zsh.
+#
+# Login shells (bash, sh) are covered by the shipped /etc/profile.d/killsuru.sh.
+# Interactive non-login shells do NOT read profile.d, so we add a small,
+# clearly-marked managed block to the system rc files. The block is idempotent
+# and removed again on package removal (see postrm).
+set -e
+
+BEGIN_MARK="# >>> killsuru (managed by the killsuru package) >>>"
+END_MARK="# <<< killsuru (managed by the killsuru package) <<<"
+SNIPPET=". /usr/share/killsuru/killsuru.sh"
+
+add_block() {
+    # $1 = rc file path
+    rc="$1"
+    [ -e "$rc" ] || return 0
+    if grep -qF "$BEGIN_MARK" "$rc" 2>/dev/null; then
+        return 0
+    fi
+    {
+        printf '\n%s\n' "$BEGIN_MARK"
+        printf '%s %s\n' "[ -r /usr/share/killsuru/killsuru.sh ] &&" "$SNIPPET"
+        printf '%s\n' "$END_MARK"
+    } >> "$rc"
+}
+
+case "$1" in
+    configure)
+        # Interactive non-login bash.
+        add_block /etc/bash.bashrc
+        # Interactive zsh (login and non-login both read zshrc on Debian/Ubuntu).
+        if [ -d /etc/zsh ]; then
+            [ -e /etc/zsh/zshrc ] || : > /etc/zsh/zshrc
+            add_block /etc/zsh/zshrc
+        fi
+        ;;
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+esac
+
+
+
+exit 0

@@ -1,0 +1,29 @@
+#!/bin/sh
+# postrm — remove the managed blocks added by postinst.
+set -e
+
+BEGIN_MARK="# >>> killsuru (managed by the killsuru package) >>>"
+END_MARK="# <<< killsuru (managed by the killsuru package) <<<"
+
+strip_block() {
+    # $1 = rc file path. Deletes the managed block (inclusive) if present.
+    rc="$1"
+    [ -f "$rc" ] || return 0
+    grep -qF "$BEGIN_MARK" "$rc" 2>/dev/null || return 0
+    tmp="${rc}.killsuru.tmp"
+    # Delete everything between (and including) the markers.
+    sed "\#$BEGIN_MARK#,\#$END_MARK#d" "$rc" > "$tmp" && mv "$tmp" "$rc"
+}
+
+case "$1" in
+    remove|purge)
+        strip_block /etc/bash.bashrc
+        strip_block /etc/zsh/zshrc
+        ;;
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+esac
+
+
+
+exit 0

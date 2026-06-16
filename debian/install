@@ -1,0 +1,4 @@
+src/usr/bin/killsuru                     usr/bin
+src/usr/share/killsuru/killsuru.sh       usr/share/killsuru
+src/usr/share/killsuru/art.txt           usr/share/killsuru
+src/etc/profile.d/killsuru.sh            etc/profile.d

@@ -1,0 +1,24 @@
+Source: killsuru
+Section: utils
+Priority: optional
+Maintainer: Akira Morooka <0825araakimoro@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.2
+Homepage: https://github.com/araaki12345/killsuru
+Rules-Requires-Root: no
+
+Package: killsuru
+Architecture: all
+Depends: ${misc:Depends}
+Recommends: ncurses-bin
+Description: Show SUSURUTV ASCII art when you run kill
+ killsuru wraps the shell `kill' builtin with a tiny shell function so that
+ a SUSURUTV ASCII art is printed whenever a process is successfully signalled.
+ .
+ The real /bin/kill is never touched: the wrapper is a shell function that
+ calls the shell builtin internally, so removing the package fully restores
+ the original behaviour. The wrapper is enabled for interactive bash and zsh
+ sessions for all users, and never affects non-interactive scripts.
+ .
+ The displayed art lives in /usr/share/killsuru/art.txt and can be overridden
+ per user via ~/.config/killsuru/art.txt.

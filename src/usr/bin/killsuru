@@ -1,0 +1,81 @@
+#!/bin/sh
+# killsuru — print the SUSURUTV ASCII art (companion to the kill() wrapper).
+#
+# Usage: killsuru [show|path|version|help]
+#
+# The art is read from (first match wins):
+#   $XDG_CONFIG_HOME/killsuru/art.txt   (per-user override; ~/.config/...)
+#   /usr/share/killsuru/art.txt         (system default)
+#
+# Environment:
+#   KILLSURU_DISABLE=1   suppress all output
+#   KILLSURU_COLOR=N     tput color index used on color terminals (default 1 = red)
+
+VERSION="0.1.0"
+SYS_ART="/usr/share/killsuru/art.txt"
+USER_ART="${XDG_CONFIG_HOME:-$HOME/.config}/killsuru/art.txt"
+
+resolve_art() {
+    if [ -r "$USER_ART" ]; then
+        printf '%s\n' "$USER_ART"
+    else
+        printf '%s\n' "$SYS_ART"
+    fi
+}
+
+show() {
+    [ "${KILLSURU_DISABLE:-0}" = "1" ] && return 0
+
+    art_file=$(resolve_art)
+    [ -r "$art_file" ] || return 0
+
+    ncolors=0
+    if [ -t 1 ] && command -v tput >/dev/null 2>&1; then
+        ncolors=$(tput colors 2>/dev/null || echo 0)
+    fi
+
+    if [ "$ncolors" -ge 8 ]; then
+        printf '%s' "$(tput setaf "${KILLSURU_COLOR:-1}" 2>/dev/null)"
+        cat "$art_file"
+        printf '%s' "$(tput sgr0 2>/dev/null)"
+    else
+        cat "$art_file"
+    fi
+}
+
+case "${1:-show}" in
+    show)
+        show
+        ;;
+    path)
+        resolve_art
+        ;;
+    -v|--version|version)
+        printf 'killsuru %s\n' "$VERSION"
+        ;;
+    -h|--help|help)
+        cat <<EOF
+killsuru — show SUSURUTV ASCII art when you kill a process
+
+Usage: killsuru [COMMAND]
+
+Commands:
+  show       print the ASCII art (default)
+  path       print which art file would be used
+  version    print the version
+  help       show this help
+
+Environment:
+  KILLSURU_DISABLE=1   suppress output
+  KILLSURU_COLOR=N     tput color index (default 1 = red)
+
+Per-user art file:
+  ${XDG_CONFIG_HOME:-\$HOME/.config}/killsuru/art.txt
+EOF
+        ;;
+    *)
+        printf 'killsuru: unknown command: %s\n' "$1" >&2
+        printf "Try 'killsuru help'.\n" >&2
+        exit 2
+        ;;
+esac

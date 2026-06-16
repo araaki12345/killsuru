@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+# Build with: dpkg-buildpackage -us -uc -b   (or: make deb)
+
+%:
+	dh $@
+
+# This source tree ships a convenience Makefile in its root. debhelper would
+# otherwise auto-detect it as a "makefile" build system and run `make`, which
+# re-enters dpkg-buildpackage and recurses forever. Files are installed via
+# debian/install, so disable the auto build/test/clean/install steps.
+override_dh_auto_build:
+override_dh_auto_test:
+override_dh_auto_clean:
+override_dh_auto_install:
+
+override_dh_fixperms:
+	dh_fixperms
+	chmod 0755 debian/killsuru/usr/bin/killsuru
