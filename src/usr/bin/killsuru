@@ -11,7 +11,7 @@
 #   KILLSURU_DISABLE=1   suppress all output
 #   KILLSURU_COLOR=N     tput color index used on color terminals (default 1 = red)
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 SYS_ART="/usr/share/killsuru/art.txt"
 USER_ART="${XDG_CONFIG_HOME:-$HOME/.config}/killsuru/art.txt"
 

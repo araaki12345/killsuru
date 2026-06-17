@@ -12,7 +12,7 @@ $ kill 12345
 [Releases](https://github.com/araaki12345/killsuru/releases/latest) から `.deb` を入れる。
 
 ```sh
-VER=0.1.0
+VER=0.1.1
 curl -LO "https://github.com/araaki12345/killsuru/releases/download/v${VER}/killsuru_${VER}_all.deb"
 sudo apt install "./killsuru_${VER}_all.deb"
 exec bash        # 新しいシェルで読み込む（zsh なら exec zsh）
@@ -63,7 +63,7 @@ Debian / Ubuntu 上で:
 ```sh
 sudo apt install build-essential debhelper devscripts dpkg-dev
 make deb           # = dpkg-buildpackage -us -uc -b
-sudo apt install ../killsuru_0.1.0_all.deb
+sudo apt install ../killsuru_0.1.1_all.deb
 ```
 
 ## ビルドせずに試す
