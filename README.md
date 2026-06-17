@@ -12,7 +12,7 @@ $ kill 12345
 [Releases](https://github.com/araaki12345/killsuru/releases/latest) から `.deb` を入れる。
 
 ```sh
-curl -LO https://github.com/araaki12345/killsuru/releases/latest/download/killsuru_0.1.0_all.deb
+curl -LO https://github.com/araaki12345/killsuru/releases/tag/v0.1.0
 sudo apt install ./killsuru_0.1.0_all.deb
 exec bash        # 新しいシェルで読み込む（zsh なら exec zsh）
 ```
