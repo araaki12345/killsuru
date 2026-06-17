@@ -11,6 +11,7 @@ strip_block() {
     [ -f "$rc" ] || return 0
     grep -qF "$BEGIN_MARK" "$rc" 2>/dev/null || return 0
     tmp="${rc}.killsuru.tmp"
+    trap 'rm -f "$tmp"' EXIT INT TERM
     # Delete everything between (and including) the markers.
     sed "\#$BEGIN_MARK#,\#$END_MARK#d" "$rc" > "$tmp" && mv "$tmp" "$rc"
 }

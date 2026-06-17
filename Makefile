@@ -40,6 +40,7 @@ check:
 	                 src/etc/profile.d/killsuru.sh debian/postinst debian/postrm; do \
 		echo "sh -n $$f"; sh -n "$$f"; \
 		if command -v bash >/dev/null 2>&1; then bash -n "$$f"; fi; \
+		if command -v zsh  >/dev/null 2>&1; then zsh  -n "$$f"; fi; \
 	done
 	@echo "Syntax OK."
 

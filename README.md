@@ -12,8 +12,9 @@ $ kill 12345
 [Releases](https://github.com/araaki12345/killsuru/releases/latest) から `.deb` を入れる。
 
 ```sh
-curl -LO https://github.com/araaki12345/killsuru/releases/tag/v0.1.0
-sudo apt install ./killsuru_0.1.0_all.deb
+VER=0.1.0
+curl -LO "https://github.com/araaki12345/killsuru/releases/download/v${VER}/killsuru_${VER}_all.deb"
+sudo apt install "./killsuru_${VER}_all.deb"
 exec bash        # 新しいシェルで読み込む（zsh なら exec zsh）
 ```
 
@@ -75,7 +76,7 @@ sudo make uninstall    # 取り消し
 ## 構文チェック
 
 ```sh
-make check             # sh -n / bash -n
+make check             # sh -n / bash -n / zsh -n
 ```
 
 ## ディレクトリ構成
