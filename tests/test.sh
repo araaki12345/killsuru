@@ -9,6 +9,7 @@ set -u
 
 ROOT=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 T=$(mktemp -d 2>/dev/null || mktemp -d -t killsuru-test)
+T=$(CDPATH='' cd -- "$T" && pwd -P)   # macOS: /var is a symlink to /private/var
 trap 'rm -rf "$T"' EXIT
 
 MARK="SUSURU_TEST_MARK"
@@ -51,7 +52,9 @@ check "default art found relative to the binary" \
 mv "$T/art.bak" "$HOME/.config/killsuru/art.txt"
 
 # --- the kill() wrapper in real shells ---------------------------------------
-KILL_OK='sleep 100 & kill $!'
+# Give the child a moment before signalling it: an interactive shell ignores
+# SIGTERM, and a freshly forked job inherits that until it has exec'd.
+KILL_OK='sleep 10 & sleep 1; kill $!'
 KILL_BAD='kill 2147483000; echo "rc=$?"'
 
 for sh_name in bash zsh dash; do
