@@ -21,30 +21,60 @@ Windows の cmd と fish には対応していません。外部への依存は�
 
 ## インストール
 
-いずれもユーザー単位で入り、管理者権限は不要です。インストール後に新しいシェルを開くと有効になります。
+3 ステップで使えるようになります。管理者権限は不要です。
 
-### Linux / macOS / WSL / Git Bash
+### 1. インストールする
+
+お使いの環境に合わせて、どれか 1 つを実行してください。
+
+**Linux / macOS / WSL / Git Bash**
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/araaki12345/killsuru/main/install.sh | sh
 ```
 
-### Windows（PowerShell）
+**Windows（PowerShell）**
 
 ```powershell
 irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 | iex
 ```
 
-- Windows PowerShell 5.1 と PowerShell 7 の両方でお使いの場合は、それぞれで実行してください。
-- 実行ポリシーが `Restricted` の場合はプロファイルが読み込まれません。インストーラが警告を表示しますので、次を実行してください。
+### 2. ターミナルを開き直す
 
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+新しいターミナル（タブやウィンドウ）を開いてください。開き直すまでは有効になりません。
+
+### 3. 試してみる
+
+適当なプロセスを起動して `kill` します。アスキーアートが表示されれば成功です。
+
+**bash / zsh**
+
+```sh
+sleep 100 &
+kill $!
 ```
 
-### Debian / Ubuntu（全ユーザー向け、.deb）
+**PowerShell（Windows）**
 
-[Releases](https://github.com/araaki12345/killsuru/releases/latest) の `.deb` をお使いください。
+```powershell
+$p = Start-Process notepad -PassThru
+kill $p.Id
+```
+
+### うまくいかないとき
+
+- **Windows で何も表示されない**: 実行ポリシーが `Restricted` だと設定が読み込まれません。次を実行してから、ターミナルを開き直してください。
+
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+
+- **Windows PowerShell 5.1 と PowerShell 7 の両方で使いたい**: 設定ファイルが別々のため、それぞれで手順 1 を実行してください。
+- **スクリプトの中では表示されない**: 仕様です。対話的に `kill` と入力したときだけ表示します。
+
+### Debian / Ubuntu で全ユーザーに入れる場合（.deb）
+
+上の方法の代わりに、[Releases](https://github.com/araaki12345/killsuru/releases/latest) の `.deb` もお使いいただけます。
 
 ```sh
 VER=0.2.0
