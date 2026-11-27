@@ -1,197 +1,175 @@
 # killsuru
 
-`kill` でプロセスの終了に成功したとき、ターミナルに SUSURUTV のアスキーアートを表示する。
+`kill` でプロセスの終了に成功すると、ターミナルに SUSURUTV のアスキーアートを表示します。
 
 ```
 $ kill 12345
-  ( SUSURUTV のアスキーアートが表示される )
+  ( SUSURUTV のアスキーアートが表示されます )
 ```
 
 ## 対応環境
 
-Unix 系は POSIX sh、Windows は PowerShell で書いてあり、外部依存はない。
+| OS | シェル | 状態 |
+|---|---|---|
+| Linux / WSL | bash、zsh、PowerShell | CI でテスト済み |
+| macOS | bash、zsh、PowerShell | CI でテスト済み |
+| Windows | PowerShell 5.1 / 7 以降 | CI でテスト済み |
+| Windows | Git Bash / MSYS2 | 未テスト |
+| FreeBSD などの BSD | bash、zsh | 未テスト |
 
-| OS | 状態 |
-|---|---|
-| Linux（ディストリ不問） / WSL | CI でテスト済み（Ubuntu） |
-| macOS | CI でテスト済み |
-| FreeBSD などの BSD | 動くはず（未テスト） |
-| Windows の Git Bash / MSYS2 | 動くはず（未テスト） |
-| Windows の PowerShell（5.1 / 7 以降） | CI でテスト済み |
-| Windows の cmd | 非対応 |
-
-対応シェルは bash、zsh、PowerShell。dash などの POSIX sh でも `eval "$(killsuru init)"` で使える。fish は非対応。
+Windows の cmd と fish には対応していません。外部への依存はありません。
 
 ## インストール
 
-### Linux / macOS / WSL / Git Bash（ユーザー単位、root 不要）
+3 ステップで使えるようになります。管理者権限は不要です。
+
+### 1. インストールする
+
+お使いの環境に合わせて、どれか 1 つを実行してください。
+
+**Linux / macOS / WSL / Git Bash**
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/araaki12345/killsuru/main/install.sh | sh
-exec $SHELL        # 新しいシェルで読み込む
 ```
 
-`~/.local` 以下にファイルを置き、`~/.zshrc` / `~/.bashrc`（macOS と Git Bash では `~/.bash_profile` なども）にマーカー付きのブロックを 1 つ追記する。
-
-リポジトリを clone 済みなら:
-
-```sh
-make install       # = sh install.sh
-```
-
-削除:
-
-```sh
-make uninstall     # = sh install.sh uninstall
-```
-
-clone していない場合は:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/araaki12345/killsuru/main/install.sh | sh -s uninstall
-```
-
-| 環境変数 | 効果 |
-|---|---|
-| `PREFIX` | インストール先（既定 `$HOME/.local`） |
-| `KILLSURU_NO_RC=1` | rc ファイルを編集しない（自分で 1 行足す） |
-| `DESTDIR` | パッケージャ用のステージング先（rc は編集しない） |
-| `KILLSURU_REF` | ダウンロードするブランチ / タグ（既定 `main`） |
-
-rc ファイルを自分で管理したい場合は、次の 1 行を足せばよい。
-
-```sh
-eval "$(killsuru init)"
-```
-
-### Windows（PowerShell）
+**Windows（PowerShell）**
 
 ```powershell
 irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 | iex
 ```
 
-`%LOCALAPPDATA%\killsuru` にファイルを置き、プロファイル（`$PROFILE.CurrentUserAllHosts`）にマーカー付きのブロックを 1 つ追記する。新しい PowerShell を開くと有効になる。
+### 2. ターミナルを開き直す
 
-Windows PowerShell 5.1 と PowerShell 7 はプロファイルが別なので、両方で使うならそれぞれで実行する。実行ポリシーが `Restricted` だとプロファイル自体が読み込まれないため、インストーラが警告を出す。その場合は次を実行する。
+新しいターミナル（タブやウィンドウ）を開いてください。開き直すまでは有効になりません。
 
-```powershell
-Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+### 3. 試してみる
+
+適当なプロセスを起動して `kill` します。アスキーアートが表示されれば成功です。
+
+**bash / zsh**
+
+```sh
+sleep 100 &
+kill $!
 ```
 
-リポジトリを clone 済みなら `.\install.ps1`、削除は `.\install.ps1 -Uninstall`。clone していない場合の削除:
+**PowerShell（Windows）**
 
 ```powershell
-$env:KILLSURU_UNINSTALL = '1'; irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 | iex; $env:KILLSURU_UNINSTALL = $null
+$p = Start-Process notepad -PassThru
+kill $p.Id
 ```
 
-Linux / macOS の PowerShell（pwsh）でも同じインストーラが使える（配置先は `~/.local/share/killsuru`）。
+### うまくいかないとき
 
-### Debian / Ubuntu（システム全体、.deb）
+- **Windows で何も表示されない**: 実行ポリシーが `Restricted` だと設定が読み込まれません。次を実行してから、ターミナルを開き直してください。
 
-[Releases](https://github.com/araaki12345/killsuru/releases/latest) から `.deb` を入れる。全ユーザーの対話シェルで有効になる。
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+
+- **Windows PowerShell 5.1 と PowerShell 7 の両方で使いたい**: 設定ファイルが別々のため、それぞれで手順 1 を実行してください。
+- **スクリプトの中では表示されない**: 仕様です。対話的に `kill` と入力したときだけ表示します。
+
+### Debian / Ubuntu で全ユーザーに入れる場合（.deb）
+
+上の方法の代わりに、[Releases](https://github.com/araaki12345/killsuru/releases/latest) の `.deb` もお使いいただけます。
 
 ```sh
 VER=0.2.0
 curl -LO "https://github.com/araaki12345/killsuru/releases/download/v${VER}/killsuru_${VER}_all.deb"
 sudo apt install "./killsuru_${VER}_all.deb"
-exec bash        # 新しいシェルで読み込む（zsh なら exec zsh）
 ```
 
-削除:
+## アンインストール
 
-```sh
-sudo apt remove killsuru
-```
-
-## 仕組み
-
-`kill()` というシェル関数を定義し、内部では `builtin kill`（dash では `command kill`）を呼ぶ。終了コードが 0 のとき `killsuru` コマンドでアートを表示する。`/bin/kill` 自体は変更しない。
-
-関数は対話シェルでのみ定義される（`case "$-"` で判定）。シェルスクリプト内の `kill` は素のまま動く。
-
-`killsuru` コマンドは自分自身の場所から `../share/killsuru/` を探すので、どの prefix（`~/.local`、`/usr`、`/usr/local`、`/opt/homebrew` …）に置いても動く。`killsuru init` は自分の絶対パスを埋め込んだ読み込み用コードを出力するため、`PATH` に入っていなくてもフックは動く。
-
-### PowerShell の場合
-
-Windows の `kill` は `Stop-Process` のエイリアスなので、このエイリアスを `Invoke-KillsuruKill` という関数に向け直す。関数は引数とパイプライン入力をそのまま `Stop-Process` に渡し、成功したら `Show-Killsuru` でアートを表示する。`Stop-Process` 自体は変更しない。Linux / macOS の pwsh ではネイティブの `kill` コマンドを呼ぶ。
-
-`-File` / `-Command` などで起動されたスクリプト実行中のセッションではフックしない（起動引数で判定）。
-
-### 読み込み経路
-
-install.sh（ユーザー単位）:
-
-| ファイル | 対象 |
+| インストール方法 | コマンド |
 |---|---|
-| `~/.zshrc`（`$ZDOTDIR` 対応） | 対話 zsh |
-| `~/.bashrc` | 対話 bash |
-| `~/.bash_profile` / `~/.bash_login` / `~/.profile` の最初にあるもの | macOS・Git Bash のログイン bash |
+| install.sh | `curl -fsSL https://raw.githubusercontent.com/araaki12345/killsuru/main/install.sh \| sh -s uninstall` |
+| install.ps1 | `$env:KILLSURU_UNINSTALL = '1'; irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 \| iex` |
+| .deb | `sudo apt remove killsuru` |
 
-存在するファイル、またはログインシェル（`$SHELL`）のものだけを対象にする。
+リポジトリを clone 済みの場合は、`make install` / `make uninstall`、または `.\install.ps1` / `.\install.ps1 -Uninstall` もお使いいただけます。
 
-.deb（システム全体）:
+## カスタマイズ
 
-| ファイル | 対象 |
-|---|---|
-| `/etc/profile.d/killsuru.sh` | ログインシェル（SSH / TTY の bash・sh） |
-| `/etc/bash.bashrc` | 非ログインの対話 bash |
-| `/etc/zsh/zshrc` | 対話 zsh |
+### アスキーアートの差し替え
 
-どちらもマーカー付きのブロックを追記し、アンインストール時に同じブロックを削除する。
-
-## アスキーアートの差し替え
-
-アートは実行ファイルと別ファイルにしてある。
-
-- 既定: `<prefix>/share/killsuru/art.txt`
-- ユーザー個別（優先）: `~/.config/killsuru/art.txt`
-
-`killsuru path` で実際に使われるファイルを確認できる。配布物を変更するときは `share/killsuru/art.txt` を編集する。
+`~/.config/killsuru/art.txt` を置くと、そちらが優先して表示されます。
 
 ### 環境変数
 
 | 変数 | 効果 |
 |---|---|
-| `KILLSURU_DISABLE=1` | 表示しない |
-| `KILLSURU_COLOR=N` | 端末での ANSI 色番号（既定 `1` = 赤、0〜255） |
-| `NO_COLOR` | 設定されていれば色を付けない |
-| `KILLSURU_FORCE=1` | PowerShell のみ。対話セッションと判定されなくてもフックする |
+| `KILLSURU_DISABLE=1` | アートを表示しません |
+| `KILLSURU_COLOR=N` | ANSI 色番号を指定します（既定は `1` = 赤、0〜255） |
+| `NO_COLOR` | 設定されていると色を付けません |
+
+### インストーラの設定
+
+| 変数 | 対象 | 効果 |
+|---|---|---|
+| `KILLSURU_NO_RC=1` | 共通 | 設定ファイルを編集しません（読み込み行はご自身で追加してください） |
+| `KILLSURU_REF` | 共通 | 取得するブランチ / タグ（既定は `main`） |
+| `PREFIX` | install.sh | インストール先（既定は `$HOME/.local`） |
+| `KILLSURU_HOME` | install.ps1 | インストール先（既定は `%LOCALAPPDATA%\killsuru`） |
+
+設定ファイルをご自身で管理される場合は、次の 1 行を追加してください。
+
+```sh
+eval "$(killsuru init)"                            # bash / zsh / sh
+```
+
+```powershell
+. "$env:LOCALAPPDATA\killsuru\killsuru.ps1"        # PowerShell
+```
+
+## 仕組み
+
+本物の `kill` には手を加えず、シェル側で薄く包んでいます。
+
+- **bash / zsh / sh**: `kill()` というシェル関数を定義し、内部でシェル組み込みの `kill` を呼びます。終了コードが 0 のときだけアートを表示します。
+- **PowerShell**: Windows の `kill` は `Stop-Process` のエイリアスです。これをラッパー関数に向け直し、引数とパイプライン入力をそのまま `Stop-Process` に渡します。Linux / macOS ではネイティブの `kill` を呼びます。
+
+どちらも対話シェルでのみ有効になり、スクリプト内の `kill` には影響しません。
+
+インストーラは、次のファイルにマーカー付きのブロックを 1 つ追記します。アンインストール時には同じブロックを削除します。
+
+| インストール方法 | 追記先 |
+|---|---|
+| install.sh | `~/.zshrc`、`~/.bashrc`（macOS と Git Bash では `~/.bash_profile` なども） |
+| install.ps1 | `$PROFILE.CurrentUserAllHosts` |
+| .deb | `/etc/bash.bashrc`、`/etc/zsh/zshrc`（加えて `/etc/profile.d/killsuru.sh` を配置） |
+
+### Windows での注意
+
+PowerShell の `kill` は Unix の `kill` と構文が異なります。
+
+- シグナル指定（`kill -9 1234`）はできません。
+- 複数の PID はカンマで区切ります（`kill 1234, 5678`）。
+- 名前で指定する場合は `kill -Name notepad` と書きます。
+- `taskkill` や、`Stop-Process` を直接呼んだ場合はアートを表示しません。
 
 ## 開発
 
 ```sh
-make check         # sh -n / bash -n / zsh -n
-make test          # 使い捨ての HOME にインストールして bash / zsh / dash で実際に kill する
-pwsh -NoProfile -File tests/test.ps1    # PowerShell 版の同等のテスト
+make check                              # 構文チェック（sh / bash / zsh）
+make test                               # bash / zsh / dash の E2E テスト
+pwsh -NoProfile -File tests/test.ps1    # PowerShell の E2E テスト
+make deb                                # .deb のビルド（Debian / Ubuntu）
 ```
-
-### .deb のビルド
-
-Debian / Ubuntu 上で:
-
-```sh
-sudo apt install build-essential debhelper devscripts dpkg-dev
-make deb           # = dpkg-buildpackage -us -uc -b
-sudo apt install ../killsuru_0.2.0_all.deb
-```
-
-## ディレクトリ構成
 
 ```
 killsuru/
-├── bin/killsuru                   # アート表示コマンド（POSIX sh）
+├── bin/killsuru              # アート表示コマンド（POSIX sh）
 ├── share/killsuru/
-│   ├── killsuru.sh                # kill() 関数（bash / zsh / sh）
-│   ├── killsuru.ps1               # kill ラッパー（PowerShell）
-│   └── art.txt                    # SUSURUTV アスキーアート
-├── install.sh                     # Unix 系のユーザー単位インストーラ
-├── install.ps1                    # PowerShell 用インストーラ
-├── tests/test.sh  tests/test.ps1  # E2E テスト
-├── debian/                        # .deb パッケージ定義（native, debhelper-compat 13）
-│   ├── control  changelog  rules  install  copyright
-│   ├── postinst  postrm           # システム rc ファイルへの追記 / 削除
-│   └── profile.d/killsuru.sh      # ログインシェル用
-├── Makefile  README.md  LICENSE
+│   ├── killsuru.sh           # kill() 関数（bash / zsh / sh）
+│   ├── killsuru.ps1          # kill ラッパー（PowerShell）
+│   └── art.txt               # アスキーアート
+├── install.sh  install.ps1   # インストーラ
+├── tests/                    # E2E テスト
+└── debian/                   # .deb パッケージ定義
 ```
 
 ## ライセンス
