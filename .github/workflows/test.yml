@@ -25,15 +25,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - { os: windows-latest, shell: pwsh }
-          - { os: windows-latest, shell: powershell }
-          - { os: ubuntu-latest, shell: pwsh }
-          - { os: macos-latest, shell: pwsh }
+        os: [windows-latest, ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
-    name: powershell (${{ matrix.os }}, ${{ matrix.shell }})
     steps:
       - uses: actions/checkout@v4
-      - name: End-to-end test
-        shell: ${{ matrix.shell }}
+      - name: End-to-end test (PowerShell 7)
+        shell: pwsh
+        run: ./tests/test.ps1
+      - name: End-to-end test (Windows PowerShell 5.1)
+        if: runner.os == 'Windows'
+        shell: powershell
         run: ./tests/test.ps1
