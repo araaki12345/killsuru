@@ -9,7 +9,7 @@ $ kill 12345
 
 ## 対応環境
 
-POSIX sh だけで書いてあり、外部依存はない。
+Unix 系は POSIX sh、Windows は PowerShell で書いてあり、外部依存はない。
 
 | OS | 状態 |
 |---|---|
@@ -17,13 +17,14 @@ POSIX sh だけで書いてあり、外部依存はない。
 | macOS | CI でテスト済み |
 | FreeBSD などの BSD | 動くはず（未テスト） |
 | Windows の Git Bash / MSYS2 | 動くはず（未テスト） |
-| Windows の PowerShell / cmd | 非対応 |
+| Windows の PowerShell（5.1 / 7 以降） | CI でテスト済み |
+| Windows の cmd | 非対応 |
 
-対応シェルは bash と zsh。dash などの POSIX sh でも `eval "$(killsuru init)"` で使える。fish は非対応。
+対応シェルは bash、zsh、PowerShell。dash などの POSIX sh でも `eval "$(killsuru init)"` で使える。fish は非対応。
 
 ## インストール
 
-### どの OS でも（ユーザー単位、root 不要）
+### Linux / macOS / WSL / Git Bash（ユーザー単位、root 不要）
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/araaki12345/killsuru/main/install.sh | sh
@@ -63,6 +64,28 @@ rc ファイルを自分で管理したい場合は、次の 1 行を足せば�
 eval "$(killsuru init)"
 ```
 
+### Windows（PowerShell）
+
+```powershell
+irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 | iex
+```
+
+`%LOCALAPPDATA%\killsuru` にファイルを置き、プロファイル（`$PROFILE.CurrentUserAllHosts`）にマーカー付きのブロックを 1 つ追記する。新しい PowerShell を開くと有効になる。
+
+Windows PowerShell 5.1 と PowerShell 7 はプロファイルが別なので、両方で使うならそれぞれで実行する。実行ポリシーが `Restricted` だとプロファイル自体が読み込まれないため、インストーラが警告を出す。その場合は次を実行する。
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
+
+リポジトリを clone 済みなら `.\install.ps1`、削除は `.\install.ps1 -Uninstall`。clone していない場合の削除:
+
+```powershell
+$env:KILLSURU_UNINSTALL = '1'; irm https://raw.githubusercontent.com/araaki12345/killsuru/main/install.ps1 | iex; $env:KILLSURU_UNINSTALL = $null
+```
+
+Linux / macOS の PowerShell（pwsh）でも同じインストーラが使える（配置先は `~/.local/share/killsuru`）。
+
 ### Debian / Ubuntu（システム全体、.deb）
 
 [Releases](https://github.com/araaki12345/killsuru/releases/latest) から `.deb` を入れる。全ユーザーの対話シェルで有効になる。
@@ -87,6 +110,12 @@ sudo apt remove killsuru
 関数は対話シェルでのみ定義される（`case "$-"` で判定）。シェルスクリプト内の `kill` は素のまま動く。
 
 `killsuru` コマンドは自分自身の場所から `../share/killsuru/` を探すので、どの prefix（`~/.local`、`/usr`、`/usr/local`、`/opt/homebrew` …）に置いても動く。`killsuru init` は自分の絶対パスを埋め込んだ読み込み用コードを出力するため、`PATH` に入っていなくてもフックは動く。
+
+### PowerShell の場合
+
+Windows の `kill` は `Stop-Process` のエイリアスなので、このエイリアスを `Invoke-KillsuruKill` という関数に向け直す。関数は引数とパイプライン入力をそのまま `Stop-Process` に渡し、成功したら `Show-Killsuru` でアートを表示する。`Stop-Process` 自体は変更しない。Linux / macOS の pwsh ではネイティブの `kill` コマンドを呼ぶ。
+
+`-File` / `-Command` などで起動されたスクリプト実行中のセッションではフックしない（起動引数で判定）。
 
 ### 読み込み経路
 
@@ -126,12 +155,14 @@ install.sh（ユーザー単位）:
 | `KILLSURU_DISABLE=1` | 表示しない |
 | `KILLSURU_COLOR=N` | 端末での ANSI 色番号（既定 `1` = 赤、0〜255） |
 | `NO_COLOR` | 設定されていれば色を付けない |
+| `KILLSURU_FORCE=1` | PowerShell のみ。対話セッションと判定されなくてもフックする |
 
 ## 開発
 
 ```sh
 make check         # sh -n / bash -n / zsh -n
 make test          # 使い捨ての HOME にインストールして bash / zsh / dash で実際に kill する
+pwsh -NoProfile -File tests/test.ps1    # PowerShell 版の同等のテスト
 ```
 
 ### .deb のビルド
@@ -151,9 +182,11 @@ killsuru/
 ├── bin/killsuru                   # アート表示コマンド（POSIX sh）
 ├── share/killsuru/
 │   ├── killsuru.sh                # kill() 関数（bash / zsh / sh）
+│   ├── killsuru.ps1               # kill ラッパー（PowerShell）
 │   └── art.txt                    # SUSURUTV アスキーアート
-├── install.sh                     # OS 共通のユーザー単位インストーラ
-├── tests/test.sh                  # E2E テスト
+├── install.sh                     # Unix 系のユーザー単位インストーラ
+├── install.ps1                    # PowerShell 用インストーラ
+├── tests/test.sh  tests/test.ps1  # E2E テスト
 ├── debian/                        # .deb パッケージ定義（native, debhelper-compat 13）
 │   ├── control  changelog  rules  install  copyright
 │   ├── postinst  postrm           # システム rc ファイルへの追記 / 削除

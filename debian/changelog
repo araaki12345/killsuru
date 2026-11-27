@@ -6,6 +6,8 @@ killsuru (0.2.0) unstable; urgency=low
     Linux, macOS, *BSD, WSL and Git Bash.
   * Colorize with plain ANSI escapes instead of tput (drops the ncurses-bin
     recommendation); honour NO_COLOR.
+  * PowerShell support (Windows PowerShell 5.1 / PowerShell 7+): killsuru.ps1
+    hook and install.ps1 installer (not shipped in the .deb).
 
  -- Akira Morooka <0825araakimoro@gmail.com>  Fri, 27 Nov 2026 12:00:00 +0900
 

@@ -21,3 +21,19 @@ jobs:
         run: make check
       - name: End-to-end test
         run: make test
+  powershell:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, shell: pwsh }
+          - { os: windows-latest, shell: powershell }
+          - { os: ubuntu-latest, shell: pwsh }
+          - { os: macos-latest, shell: pwsh }
+    runs-on: ${{ matrix.os }}
+    name: powershell (${{ matrix.os }}, ${{ matrix.shell }})
+    steps:
+      - uses: actions/checkout@v4
+      - name: End-to-end test
+        shell: ${{ matrix.shell }}
+        run: ./tests/test.ps1
