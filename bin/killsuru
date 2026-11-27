@@ -1,0 +1,143 @@
+#!/bin/sh
+# killsuru — print the SUSURUTV ASCII art (companion to the kill() wrapper).
+#
+# Usage: killsuru [show|init|path|version|help]
+#
+# Pure POSIX sh, no dependencies. Works wherever it is installed (any prefix):
+# the data directory is located relative to this script (../share/killsuru).
+#
+# The art is read from (first match wins):
+#   $XDG_CONFIG_HOME/killsuru/art.txt   (per-user override; ~/.config/...)
+#   <prefix>/share/killsuru/art.txt     (shipped default)
+#
+# Environment:
+#   KILLSURU_DISABLE=1   suppress all output
+#   KILLSURU_COLOR=N     ANSI color index on terminals (default 1 = red)
+#   NO_COLOR             if set (non-empty), never colorize
+
+VERSION="0.2.0"
+
+# Absolute path of this script, following symlinks (readlink without -f is
+# available on Linux, macOS and the BSDs alike).
+self_path() {
+    p=$0
+    case "$p" in
+        */*) ;;
+        *) p=$(command -v -- "$p" 2>/dev/null) || p=$0 ;;
+    esac
+    n=0
+    while [ -L "$p" ] && [ "$n" -lt 40 ]; do
+        d=$(CDPATH='' cd -- "$(dirname -- "$p")" && pwd -P) || break
+        l=$(readlink -- "$p") || break
+        case "$l" in
+            /*) p=$l ;;
+            *)  p=$d/$l ;;
+        esac
+        n=$((n + 1))
+    done
+    d=$(CDPATH='' cd -- "$(dirname -- "$p")" 2>/dev/null && pwd -P) || d=$(dirname -- "$p")
+    printf '%s/%s\n' "$d" "$(basename -- "$p")"
+}
+
+SELF=$(self_path)
+BIN_DIR=$(dirname -- "$SELF")
+SHARE_DIR=$(CDPATH='' cd -- "$BIN_DIR/../share/killsuru" 2>/dev/null && pwd -P) \
+    || SHARE_DIR="/usr/share/killsuru"
+SYS_ART="$SHARE_DIR/art.txt"
+USER_ART="${XDG_CONFIG_HOME:-$HOME/.config}/killsuru/art.txt"
+
+resolve_art() {
+    if [ -r "$USER_ART" ]; then
+        printf '%s\n' "$USER_ART"
+    else
+        printf '%s\n' "$SYS_ART"
+    fi
+}
+
+show() {
+    [ "${KILLSURU_DISABLE:-0}" = "1" ] && return 0
+
+    art_file=$(resolve_art)
+    [ -r "$art_file" ] || return 0
+
+    color=""
+    if [ -t 1 ] && [ -z "${NO_COLOR:-}" ] && [ "${TERM:-dumb}" != "dumb" ]; then
+        color=${KILLSURU_COLOR:-1}
+    fi
+
+    case "$color" in
+        ''|*[!0-9]*)
+            cat "$art_file"
+            ;;
+        [0-7])
+            printf '\033[3%sm' "$color"
+            cat "$art_file"
+            printf '\033[0m'
+            ;;
+        *)
+            printf '\033[38;5;%sm' "$color"
+            cat "$art_file"
+            printf '\033[0m'
+            ;;
+    esac
+}
+
+# Quote a string for safe re-reading by a POSIX shell.
+shquote() {
+    printf "'%s'" "$(printf '%s' "$1" | sed "s/'/'\\\\''/g")"
+}
+
+# Print shell code that enables the kill() wrapper.
+# Meant to be used from an rc file:   eval "$(killsuru init)"
+init() {
+    hook="$SHARE_DIR/killsuru.sh"
+    if [ ! -r "$hook" ]; then
+        printf 'killsuru: hook script not found: %s\n' "$hook" >&2
+        return 1
+    fi
+    printf 'KILLSURU_BIN=%s\n' "$(shquote "$SELF")"
+    printf '. %s\n' "$(shquote "$hook")"
+}
+
+case "${1:-show}" in
+    show)
+        show
+        ;;
+    init)
+        init
+        ;;
+    path)
+        resolve_art
+        ;;
+    -v|--version|version)
+        printf 'killsuru %s\n' "$VERSION"
+        ;;
+    -h|--help|help)
+        cat <<EOF
+killsuru — show SUSURUTV ASCII art when you kill a process
+
+Usage: killsuru [COMMAND]
+
+Commands:
+  show       print the ASCII art (default)
+  init       print shell code enabling the kill() wrapper (bash / zsh / sh)
+             put this in your rc file:  eval "\$(killsuru init)"
+  path       print which art file would be used
+  version    print the version
+  help       show this help
+
+Environment:
+  KILLSURU_DISABLE=1   suppress output
+  KILLSURU_COLOR=N     ANSI color index (default 1 = red; 0-255)
+  NO_COLOR             if set, never colorize
+
+Per-user art file:
+  ${XDG_CONFIG_HOME:-\$HOME/.config}/killsuru/art.txt
+EOF
+        ;;
+    *)
+        printf 'killsuru: unknown command: %s\n' "$1" >&2
+        printf "Try 'killsuru help'.\n" >&2
+        exit 2
+        ;;
+esac

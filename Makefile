@@ -1,48 +1,43 @@
 # killsuru — convenience Makefile
 #
-#   make deb        build the .deb (needs dpkg-dev, debhelper)
-#   make install    install straight into the system (no .deb; needs root)
+#   make install    install for the current user (PREFIX=$$HOME/.local) and hook rc files
 #   make uninstall  remove a `make install` installation
+#   make test       end-to-end test in a throw-away HOME (bash / zsh / dash)
 #   make check      shell-syntax check the scripts
+#   make deb        build the .deb (Debian / Ubuntu; needs dpkg-dev, debhelper)
 #   make clean      remove build artifacts
+#
+# Works with GNU make and BSD make. Packagers:
+#   make install PREFIX=/usr/local DESTDIR=/tmp/stage   (rc files are not touched)
 
+PREFIX  ?= $(HOME)/.local
 DESTDIR ?=
 
-.PHONY: deb install uninstall check clean
+SCRIPTS = bin/killsuru share/killsuru/killsuru.sh install.sh tests/test.sh \
+          debian/profile.d/killsuru.sh debian/postinst debian/postrm
 
-deb:
-	dpkg-buildpackage -us -uc -b
-	@echo "Built .deb is in the parent directory."
+.PHONY: install uninstall test check deb clean
 
 install:
-	install -Dm0755 src/usr/bin/killsuru                $(DESTDIR)/usr/bin/killsuru
-	install -Dm0644 src/usr/share/killsuru/killsuru.sh  $(DESTDIR)/usr/share/killsuru/killsuru.sh
-	install -Dm0644 src/usr/share/killsuru/art.txt      $(DESTDIR)/usr/share/killsuru/art.txt
-	install -Dm0644 src/etc/profile.d/killsuru.sh       $(DESTDIR)/etc/profile.d/killsuru.sh
-	@if [ -z "$(DESTDIR)" ]; then \
-		sh debian/postinst configure; \
-		echo "Installed. Open a new shell (or: source /usr/share/killsuru/killsuru.sh)."; \
-	else \
-		echo "Staged into $(DESTDIR). Run debian/postinst on the target to wire rc files."; \
-	fi
+	PREFIX="$(PREFIX)" DESTDIR="$(DESTDIR)" sh install.sh install
 
 uninstall:
-	@if [ -z "$(DESTDIR)" ]; then sh debian/postrm remove || true; fi
-	rm -f  $(DESTDIR)/usr/bin/killsuru
-	rm -f  $(DESTDIR)/usr/share/killsuru/killsuru.sh
-	rm -f  $(DESTDIR)/usr/share/killsuru/art.txt
-	rm -f  $(DESTDIR)/etc/profile.d/killsuru.sh
-	rmdir  $(DESTDIR)/usr/share/killsuru 2>/dev/null || true
-	@echo "Uninstalled."
+	PREFIX="$(PREFIX)" DESTDIR="$(DESTDIR)" sh install.sh uninstall
+
+test:
+	sh tests/test.sh
 
 check:
-	@set -e; for f in src/usr/bin/killsuru src/usr/share/killsuru/killsuru.sh \
-	                 src/etc/profile.d/killsuru.sh debian/postinst debian/postrm; do \
+	@set -e; for f in $(SCRIPTS); do \
 		echo "sh -n $$f"; sh -n "$$f"; \
 		if command -v bash >/dev/null 2>&1; then bash -n "$$f"; fi; \
 		if command -v zsh  >/dev/null 2>&1; then zsh  -n "$$f"; fi; \
 	done
 	@echo "Syntax OK."
+
+deb:
+	dpkg-buildpackage -us -uc -b
+	@echo "Built .deb is in the parent directory."
 
 clean:
 	rm -rf debian/killsuru debian/.debhelper debian/files \
