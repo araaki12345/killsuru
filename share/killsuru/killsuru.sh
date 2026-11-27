@@ -1,17 +1,16 @@
-# /usr/share/killsuru/killsuru.sh
+# killsuru.sh — kill() wrapper for interactive shells.
 #
-# killsuru — shared shell function for bash & zsh
-# (also safe to be sourced by POSIX sh login shells such as dash).
+# Works in bash, zsh and POSIX sh (dash, ash, ksh). OS independent:
+# Linux, macOS, *BSD, WSL, Git Bash / MSYS2.
 #
-# It defines a kill() wrapper that, after a process is successfully
+# It defines a kill() function that, after a process is successfully
 # signalled, prints a SUSURUTV ASCII art via the `killsuru` helper command.
 # The real kill is never replaced; we only shadow it with a shell function
 # and call the shell builtin from inside.
 #
-# This file is sourced from:
-#   /etc/profile.d/killsuru.sh   (login shells: bash, sh)
-#   /etc/bash.bashrc             (interactive non-login bash)
-#   /etc/zsh/zshrc               (interactive zsh)
+# Load it from your rc file with:
+#   eval "$(killsuru init)"
+# which sets KILLSURU_BIN (absolute path of the helper) and sources this file.
 
 # Hook interactive shells only — never disturb scripts / non-interactive use.
 case "$-" in
@@ -31,8 +30,6 @@ _killsuru_real() {
 }
 
 kill() {
-    local _rc
-
     # Pass purely-informational invocations straight through (no art).
     case " $* " in
         *" -l "*|*" -L "*|*" --help "*|*" --version "*)
@@ -42,12 +39,13 @@ kill() {
     esac
 
     _killsuru_real "$@"
-    _rc=$?
+    _killsuru_rc=$?
 
     # Only susuru on an actual, successful signal.
-    if [ "$_rc" -eq 0 ] && command -v killsuru >/dev/null 2>&1; then
-        killsuru show
+    if [ "$_killsuru_rc" -eq 0 ] &&
+       command -v "${KILLSURU_BIN:-killsuru}" >/dev/null 2>&1; then
+        "${KILLSURU_BIN:-killsuru}" show
     fi
 
-    return $_rc
+    return "$_killsuru_rc"
 }

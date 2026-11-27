@@ -1,3 +1,14 @@
+killsuru (0.2.0) unstable; urgency=low
+
+  * Multi-OS support: prefix-independent layout (bin/, share/), the helper
+    locates its data relative to itself.
+  * New `killsuru init' subcommand and install.sh per-user installer for
+    Linux, macOS, *BSD, WSL and Git Bash.
+  * Colorize with plain ANSI escapes instead of tput (drops the ncurses-bin
+    recommendation); honour NO_COLOR.
+
+ -- Akira Morooka <0825araakimoro@gmail.com>  Fri, 27 Nov 2026 12:00:00 +0900
+
 killsuru (0.1.1) unstable; urgency=low
 
   * Fix install URL in README (releases/tag/ → releases/download/).
